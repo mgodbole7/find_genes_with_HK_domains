@@ -1,5 +1,5 @@
 #! /bin/bash
-# usage: ./find_genes_with_HKdomains.sh <query file (fasta)> <assembly dir> <genome BED dir> <output dir>
+# usage: ./find_genes_with_HKdomains.sh <query file (fasta)> <assembly dir> <genome BED dir> <output dir name>
 # note: renamed to ./mgodbole7.sh for assignment submission purposes
 
 queryfile="$1"
@@ -21,6 +21,7 @@ for genome_bed_file in "$genome_bed_dir"/*.bed; do
         -subject "$subject_file" \
         -outfmt "6 std qlen" \
         -task tblastn-fast \
+        # filter for >30% seq identity and >90% match length
         | awk -v OFS='\t' -v genome_name="$genome_name" -v output_file="$output_file" -v genome_bed_file="$genome_bed_file" '
             $3>30 && $4>0.9*$13 {
                 # Parse the blast output
@@ -38,9 +39,9 @@ for genome_bed_file in "$genome_bed_dir"/*.bed; do
                 }
                 close(genome_bed_file)
             }
-        ' | sort -k2,2 | uniq > "$output_file"
+        ' | sort | uniq > "$output_file"
 
     # count number of unique genes identified
     num_genes=$(wc -l < "$output_file")
-    echo "$genome_name contains $num_genes genes"
+    echo "$genome_name has $num_genes genes that contain predicted HK domains"
 done
